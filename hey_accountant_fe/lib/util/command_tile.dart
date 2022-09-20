@@ -12,7 +12,7 @@ class CommandTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color tileColor = Color.fromARGB(211, 90, 90, 90);
+    Color tileColor = const Color.fromARGB(211, 90, 90, 90);
     Color textColor = Colors.grey;
     Icon icon = Icon(
       Icons.question_mark_outlined,
