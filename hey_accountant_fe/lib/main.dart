@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hey_accountant_fe/pages/home_page.dart';
+import 'package:hey_accountant_fe/pages/navpages/main_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,9 +10,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      // home: HomePage(),
+      home: MainPage(),
     );
   }
 }
