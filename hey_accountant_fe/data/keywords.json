@@ -1,0 +1,59 @@
+{
+    "keywords": "root",
+    "command": null,
+    "children": 
+    [
+        {
+            "keywords": "create,make",
+            "command": null,
+            "children": [
+                {
+                    "keywords": "account",
+                    "command": "CREATE_ACCOUNT",
+                    "children": []
+                },
+                {
+                    "keywords": "goal",
+                    "command": "CREATE_GOAL",
+                    "children": []
+                },
+                {
+                    "keywords": "bill",
+                    "command": "CREATE_BILL",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "keywords": "tell,how",
+            "command": null,
+            "children": [
+                {
+                    "keywords": "transactions",
+                    "command": "TRANSACTIONS",
+                    "children": []
+                },
+                {
+                    "keywords": "goals",
+                    "command": "GOALS",
+                    "children": []
+                },
+                {
+                    "keywords": "bills",
+                    "command": "BILLS",
+                    "children": []
+                },
+                {
+                    "keywords": "account",
+                    "command": "ACCOUNT",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "keywords": "move,transfer",
+            "command": "MOVE",
+            "children": []
+        }
+    ]
+}

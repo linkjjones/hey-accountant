@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 
 class MicButton extends StatelessWidget {
-  const MicButton({super.key});
+  final Function startRun;
+  final Function stopRun;
+  final bool isRunning;
+  const MicButton({
+    super.key,
+    required this.startRun,
+    required this.stopRun,
+    required this.isRunning,
+  });
+
+  changeRunState() {
+    isRunning ? stopRun : startRun;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,19 +23,18 @@ class MicButton extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black54,
+            color: Colors.black26,
             blurRadius: 6.0,
             spreadRadius: 0.0,
           )
         ],
       ),
-      margin: const EdgeInsets.only(right: 20, bottom: 20),
+      margin: const EdgeInsets.only(right: 22, bottom: 22),
       child: ClipOval(
         child: Material(
-          elevation: 30,
-          color: Colors.green,
+          color: isRunning ? Colors.red : Colors.green,
           child: InkWell(
-            onTap: () {},
+            onTap: () { print('callingback'); },
             child: const Padding(
               padding: EdgeInsets.all(10),
               child: Icon(

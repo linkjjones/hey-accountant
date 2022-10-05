@@ -12,21 +12,18 @@ class CommandTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // set as suggestion
     Color tileColor = Colors.black54;
     Color textColor = Colors.grey;
-    Icon icon = Icon(
-      Icons.question_mark_outlined,
-      color: textColor,
-    );
-
+    Icon icon = const Icon(Icons.question_mark_outlined, color: Colors.grey);
+    // if matched
     if (matchesKeyword) {
       textColor = Colors.white;
       tileColor = Colors.green;
-      icon = Icon(
-        Icons.check,
-        color: textColor,
-      );
+      icon = const Icon(Icons.check_sharp, color: Colors.white);
     }
+    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Container(
