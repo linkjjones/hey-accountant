@@ -1,11 +1,12 @@
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:hey_accountant_fe/components/command_tile.dart';
+import 'package:hey_accountant_fe/utils/constants.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:hey_accountant_fe/businesslogic/node.dart';
+import 'package:hey_accountant_fe/models/node.dart';
 import 'package:hey_accountant_fe/businesslogic/command_tree.dart';
-import 'package:hey_accountant_fe/businesslogic/pair.dart';
+import 'package:hey_accountant_fe/utils/pair.dart';
 
 class VoiceUIPage extends StatefulWidget {
   const VoiceUIPage({super.key});
@@ -21,8 +22,9 @@ class _VoiceUIPageState extends State<VoiceUIPage> {
   String _lastWords = "";
   Node currentNode = Node(children: [], command: "", keywords: "");
   final CommandTree _commandTree = CommandTree();
-
-  late RestartableTimer _timer = RestartableTimer(const Duration(seconds: 2), _stopListening);
+  List<CommandTile> _commandTileList = [];
+  late RestartableTimer _timer =
+      RestartableTimer(const Duration(seconds: 2), _stopListening);
 
   @override
   void initState() {
@@ -37,6 +39,7 @@ class _VoiceUIPageState extends State<VoiceUIPage> {
   void _initSpeech() async {
     _speechEnabled = await _speechToText.initialize();
     currentNode = _commandTree.currentNode;
+    buildCommandTileList();
     setState(() {});
   }
 
@@ -56,36 +59,59 @@ class _VoiceUIPageState extends State<VoiceUIPage> {
   // of result.recognizedWords
   void _stopListening() async {
     await _speechToText.stop();
-    if(_timer.isActive) { _timer.cancel(); }
+    if (_timer.isActive) {
+      _timer.cancel();
+    }
     // TODO:
     // If the current node has a command
     // run it and pass the remaining _lastWords
     setState(() {
       _isListening = false;
+      _lastWords = "";
     });
   }
 
   // This is the callback that the SpeechToText plugin calls when
   // the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) {
-    // Pair<result.recognizedWords truncated or not, node 
-    Pair<String, Node> node = _commandTree.findChildNodeByKeyword(result.recognizedWords, currentNode);
-    currentNode = node.b;
-    // TODO: update command buttons
-    
-    // Debug
-    print("New current node: ${currentNode.keywords}");
-    // get node.children to update UI command list
-    setState(() {
-      _lastWords = node.a;
-    });
+    // Pair<result.recognizedWords truncated or not, node
+    Pair<String, Node> textNode = _commandTree.moveToChildNodeByKeyword(
+        result.recognizedWords, currentNode);
+    currentNode = textNode.b;
+    buildCommandTileList(_lastWords.contains(START_OVER_PHRASE));
+    _lastWords = textNode.a;
+    setState(() {});
     _timer.reset();
+  }
+
+  buildCommandTileList([bool clearList = false]) {
+    if (clearList) {
+      currentNode = _commandTree.rootNode;
+    }
+    // remove all suggestion tiles
+    _commandTileList.removeWhere((tile) => !tile.matchesKeyword);
+    // add matching node tile
+    if (currentNode.keywords != "root") {
+      _commandTileList.add(CommandTile(
+          commandKeyword: currentNode.keywords.replaceAll(',', ' | '), matchesKeyword: true));
+    }
+    // add current node's suggestions/children
+    for (var node in currentNode.children) {
+      _commandTileList.add(
+          CommandTile(commandKeyword: node.keywords.replaceAll(',', ' | '), matchesKeyword: false));
+    }
+    // remove duplicates
+    for (int i = 1; i < _commandTileList.length; i++) {
+      if (_commandTileList[i].commandKeyword ==
+      _commandTileList[i - 1].commandKeyword) {
+        _commandTileList.removeAt(i-1);
+      }
+    }
   }
 
   void _listenToggle() async {
     if (_speechEnabled) {
       setState(() => _isListening = !_isListening);
-      // _timer.reset();
       _isListening ? _startListening() : _stopListening();
     }
   }
@@ -178,8 +204,9 @@ class _VoiceUIPageState extends State<VoiceUIPage> {
                     ),
 
                     // Status
-                    Text( _isListening ? "Listening..." : "",
-                      style: TextStyle(
+                    Text(
+                      _isListening ? "Listening..." : "",
+                      style: const TextStyle(
                           color: Colors.white,
                           fontSize: 22,
                           fontWeight: FontWeight.bold),
@@ -202,26 +229,9 @@ class _VoiceUIPageState extends State<VoiceUIPage> {
                       children: [
                         // Commands list view
                         Expanded(
-                          child: ListView(
-                            children: const [
-                              CommandTile(
-                                commandKeyword: 'Hey Accountant',
-                                matchesKeyword: true,
-                              ),
-                              CommandTile(
-                                commandKeyword: 'what accounts...',
-                                matchesKeyword: false,
-                              ),
-                              CommandTile(
-                                commandKeyword: 'what goals...',
-                                matchesKeyword: false,
-                              ),
-                              CommandTile(
-                                commandKeyword: 'move...',
-                                matchesKeyword: false,
-                              ),
-                            ],
-                          ),
+                          child: ListView(children: [
+                            ..._commandTileList,
+                          ]),
                         ),
                       ],
                     ),
@@ -232,36 +242,35 @@ class _VoiceUIPageState extends State<VoiceUIPage> {
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: 
-              Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6.0,
-                      spreadRadius: 0.0,
-                    )
-                  ],
-                ),
-                margin: const EdgeInsets.only(bottom: 22),
-                child: ClipOval(
-                  child: Material(
-                    color: _isListening ? Colors.red : Colors.green,
-                    child: InkWell(
-                      onTap: _listenToggle,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Icon(
-                          _isListening ? Icons.mic : Icons.mic_none,
-                          size: 33,
-                          color: Colors.white,
-                        ),
+            child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6.0,
+                    spreadRadius: 0.0,
+                  )
+                ],
+              ),
+              margin: const EdgeInsets.only(bottom: 22),
+              child: ClipOval(
+                child: Material(
+                  color: _isListening ? Colors.red : Colors.green,
+                  child: InkWell(
+                    onTap: _listenToggle,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(
+                        _isListening ? Icons.mic : Icons.mic_none,
+                        size: 33,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
               ),
+            ),
           ),
         ],
       ),
